@@ -1,5 +1,5 @@
 # jenkins-cicd
 dummy tetx
-mstr 1
-mstr 2
-mstr 3
+mybranch 1
+mybranch 2
+mybranch 3
