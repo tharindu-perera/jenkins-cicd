@@ -1,7 +1,7 @@
 def COLOR_MAP = ['SUCCESS': 'good', 'FAILURE': 'danger', ]
 blocks = [["type": "section", "text": ["type": "mrkdwn", "text": "Hello, Assistant to the Regional Manager Dwight! *Michael Scott* wants to know where you'd like to take the Paper Company investors to dinner tonight.\n\n *Please select a restaurant:*"]], ["type": "divider"], ["type": "section", "text": ["type": "mrkdwn", "text": "*Farmhouse Thai Cuisine*\n:star::star::star::star: 1528 reviews\n They do have some vegan options, like the roti and curry, plus they have a ton of salad stuff and noodles can be ordered without meat!! They have something for everyone here"], "accessory": ["type": "image", "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/c7ed05m9lC2EmA3Aruue7A/o.jpg", "alt_text": "alt text for image"]]]
 def attachments = [[
-text: 'I find your lack of faith disturbing!', fallback: 'Hey, Vader seems to be mad at you.', color: '#ff0000']]
+text: 'I find your lack of faith disturbing!', fallback: 'Hey, Vader seems to be mad at you.', color: 'green']]
 
 def getBuildUser() {
   return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
@@ -43,7 +43,7 @@ pipeline {
             sh 'chmod +x gradlew'
 
             sh './gradlew build -x test --no-daemon'
-            //             sh './gradlew test jacocoTestReport  jacocoTestCoverageVerification --no-daemon'
+                        sh './gradlew test jacocoTestReport  jacocoTestCoverageVerification --no-daemon'
             sh './gradlew test jacocoTestReport    --no-daemon'
           } finally {
             print('xxxxxxxxxxxxxx')
@@ -54,8 +54,24 @@ pipeline {
         }
 
         junit '**/build/test-results/test/*.xml'
+        // step( [ $class: 'JacocoPublisher' ] )
+
+         script {
+
+               def scannerHome = tool 'sonarqube';
+
+                   withSonarQubeEnv("sonarqube-container") {
+
+                   sh "${tool("sonarqube")}/bin/sonar-scanner  -Dsonar.projectKey=test-node-js  -Dsonar.sources=. -Dsonar.css.node=.  -Dsonar.host.url=http://localhost:9000   -Dsonar.login=your-generated-token-from-sonarqube-container"
+
+                       }
+
+                   }
+
+
 
 //         jacoco deltaLineCoverage: '50', exclusionPattern: '**/*Test*.class' , inclusionPattern: '**/*.class',   maximumLineCoverage: '90', changeBuildStatus: true
+
         slackSend(channel: "#general", color: COLOR_MAP[currentBuild.currentResult], message: "*${currentBuild.currentResult} * Deploy Approval: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.JOB_DISPLAY_URL})", attachments: attachments, blocks: blocks)
         // script {
         //   try {
