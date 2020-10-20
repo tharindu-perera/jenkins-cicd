@@ -141,6 +141,7 @@ pipeline {
                 script {
                     BUILD_USER = currentBuild.getBuildCauses()[0].shortDescription
                     SLACK_USER = env.user_name
+                    PR_NUM=env.CHANGE_ID
                     GIT_PR_LINK = env.CHANGE_URL
                     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse HEAD')
                     COMMIT_AUTHOR = sh(returnStdout: true, script: "git --no-pager show -s --format='%an' ${COMMIT_HASH}").trim()
@@ -151,6 +152,7 @@ pipeline {
                     echo "COMMIT_AUTHOR: ${COMMIT_AUTHOR}"
                     echo "COMMIT_HASH: ${COMMIT_HASH}"
                     echo "GIT_PR_LINK: ${GIT_PR_LINK}"
+                    echo "PR_NUM: ${PR_NUM}"
                 }
             }
             post {
@@ -237,142 +239,142 @@ pipeline {
                     }
                 }
 
-//                stage('build ') {
-//                    steps {
-//                        script {
-//                            try {
-//                                sh "./gradlew clean build -x test -x check"
-//                            } catch (exception) {
-//                                errorReport(TYPE)
-//                                throw exception
-//                            }
-//                        }
-//                    }
-//                }
-//////
-//                stage('Junit & Jacoco') {
-//                    steps('running junit') {
-//                        script {
-//                            try {
-//                                sh 'chmod +x gradlew'
-//                                sh './gradlew test jacocoTestReport --no-daemon'
-//                                // if in case tests fail then subsequent stages
-//                                // will not run .but post block in this stage will run
-//                            }
-//                            catch (exception) {
-//                                echo "$exception"
-//                                summary = junit testResults: '**/build/test-results/test/*.xml'
-//                                testsummary = summary.getProperties().toString().replaceAll("class:class hudson.tasks.junit.TestResultSummary,", "")
-//                                testRpeortLink = env.RUN_TESTS_DISPLAY_URL
-//                                coverageRpeortLink = BUILD_URL + "jacoco"
-//                                errorReport(TYPE)
-//                                throw exception
-//                            }
-//                            finally {
-//                                summary = junit testResults: '**/build/test-results/test/*.xml'
-//                                testsummary = summary.getProperties().toString().replaceAll("class:class hudson.tasks.junit.TestResultSummary,", "")
-//                                testRpeortLink = env.RUN_TESTS_DISPLAY_URL
-//                                coverageRpeortLink = BUILD_URL + "jacoco"
-//                                step([$class          : 'JacocoPublisher',
-//                                      execPattern     : '**/build/jacoco/*.exec',
-//                                      classPattern    : '**/build/classes',
-//                                      sourcePattern   : 'src/main/java',
-//                                      exclusionPattern: 'src/test*'
-//                                ])
-//                                publishHTML target: [
-//                                        allowMissing         : false,
-//                                        alwaysLinkToLastBuild: false,
-//                                        keepAll              : true,
-//                                        reportDir            : "build/reports/tests/test",
-//                                        reportFiles          : 'index.html',
-//                                        reportName           : 'Junit Report'
-//                                ]
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                stage('Checkstyle') {
-//                    steps {
-//                        script {
-//                            try {
-//                                sh "./gradlew checkstyleMain checkstyleTest"
-//                            } catch (exception) {
-//                                checkstyleLink = BUILD_URL + "Checkstyle_20Report"
-//                                errorReport(TYPE)
-//                                throw exception
-//                            } finally {
-//                                checkstyleLink = BUILD_URL + "Checkstyle_20Report"
-//                                publishHTML target: [
-//                                        allowMissing         : false,
-//                                        alwaysLinkToLastBuild: false,
-//                                        keepAll              : true,
-//                                        reportDir            : "build/reports/checkstyle",
-//                                        reportFiles          : '**/*',
-//                                        reportName           : 'Checkstyle Report'
-//                                ]
-//                            }
-//                        }
-//                    }
-//                }
+                stage('build ') {
+                    steps {
+                        script {
+                            try {
+                                sh "./gradlew clean build -x test -x check"
+                            } catch (exception) {
+                                errorReport(TYPE)
+                                throw exception
+                            }
+                        }
+                    }
+                }
 ////
-//                stage('PMD') {
-//                    steps {
-//                        script {
-//                            try {
-//                                sh "./gradlew pmdmain pmdtest"
-//                            } catch (exception) {
-//                                pmdLink = BUILD_URL + "PMD_20Report"
-////                                errorReport(TYPE)
-////                                        throw exception
-//                            } finally {
-//                                pmdLink = BUILD_URL + "PMD_20Report"
-//                                publishHTML target: [
-//                                        allowMissing         : false,
-//                                        alwaysLinkToLastBuild: false,
-//                                        keepAll              : true,
-//                                        reportDir            : "build/reports/pmd",
-//                                        reportFiles          : 'main.html,test.html',
-//                                        reportName           : 'PMD Report'
-//                                ]
-//                            }
-//                        }
-//                    }
-//                }
+                stage('Junit & Jacoco') {
+                    steps('running junit') {
+                        script {
+                            try {
+                                sh 'chmod +x gradlew'
+                                sh './gradlew test jacocoTestReport --no-daemon'
+                                // if in case tests fail then subsequent stages
+                                // will not run .but post block in this stage will run
+                            }
+                            catch (exception) {
+                                echo "$exception"
+                                summary = junit testResults: '**/build/test-results/test/*.xml'
+                                testsummary = summary.getProperties().toString().replaceAll("class:class hudson.tasks.junit.TestResultSummary,", "")
+                                testRpeortLink = env.RUN_TESTS_DISPLAY_URL
+                                coverageRpeortLink = BUILD_URL + "jacoco"
+                                errorReport(TYPE)
+                                throw exception
+                            }
+                            finally {
+                                summary = junit testResults: '**/build/test-results/test/*.xml'
+                                testsummary = summary.getProperties().toString().replaceAll("class:class hudson.tasks.junit.TestResultSummary,", "")
+                                testRpeortLink = env.RUN_TESTS_DISPLAY_URL
+                                coverageRpeortLink = BUILD_URL + "jacoco"
+                                step([$class          : 'JacocoPublisher',
+                                      execPattern     : '**/build/jacoco/*.exec',
+                                      classPattern    : '**/build/classes',
+                                      sourcePattern   : 'src/main/java',
+                                      exclusionPattern: 'src/test*'
+                                ])
+                                publishHTML target: [
+                                        allowMissing         : false,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll              : true,
+                                        reportDir            : "build/reports/tests/test",
+                                        reportFiles          : 'index.html',
+                                        reportName           : 'Junit Report'
+                                ]
+                            }
+                        }
+                    }
+                }
+
+                stage('Checkstyle') {
+                    steps {
+                        script {
+                            try {
+                                sh "./gradlew checkstyleMain checkstyleTest"
+                            } catch (exception) {
+                                checkstyleLink = BUILD_URL + "Checkstyle_20Report"
+                                errorReport(TYPE)
+                                throw exception
+                            } finally {
+                                checkstyleLink = BUILD_URL + "Checkstyle_20Report"
+                                publishHTML target: [
+                                        allowMissing         : false,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll              : true,
+                                        reportDir            : "build/reports/checkstyle",
+                                        reportFiles          : '**/*',
+                                        reportName           : 'Checkstyle Report'
+                                ]
+                            }
+                        }
+                    }
+                }
 //
-//                stage('SQ analysis') { //there are 2 ways to configure sonar in jenkins
-//                    //one method usingg jenkins global configuration
-//                    steps {
-//                        script {
-////                    def scannerHome = tool 'SonarScanner 4.0';
-////                    withSonarQubeEnv('mysona') { // If you have configured more than one global server connection, you can specify its name
-////                        sh "${scannerHome}/bin/sonar-scanner"
-////                    }
-//                            //other one is using gradle build
-//                            withSonarQubeEnv() {
-//                                // Will pick the global server connection you have configured
-//                                sh "./gradlew sonarqube -Dsonar.projectName=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
-//                            }
-//                            timeout(time: 1, unit: 'HOURS') {
-//                                // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
-//                                // true = set pipeline to UNSTABLE, false = don't
-//                                waitForQualityGate abortPipeline: true
-//                            }
-//                        }
+                stage('PMD') {
+                    steps {
+                        script {
+                            try {
+                                sh "./gradlew pmdmain pmdtest"
+                            } catch (exception) {
+                                pmdLink = BUILD_URL + "PMD_20Report"
+//                                errorReport(TYPE)
+//                                        throw exception
+                            } finally {
+                                pmdLink = BUILD_URL + "PMD_20Report"
+                                publishHTML target: [
+                                        allowMissing         : false,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll              : true,
+                                        reportDir            : "build/reports/pmd",
+                                        reportFiles          : 'main.html,test.html',
+                                        reportName           : 'PMD Report'
+                                ]
+                            }
+                        }
+                    }
+                }
+
+                stage('SQ analysis') { //there are 2 ways to configure sonar in jenkins
+                    //one method usingg jenkins global configuration
+                    steps {
+                        script {
+//                    def scannerHome = tool 'SonarScanner 4.0';
+//                    withSonarQubeEnv('mysona') { // If you have configured more than one global server connection, you can specify its name
+//                        sh "${scannerHome}/bin/sonar-scanner"
 //                    }
-//                    post {
-//                        always {
-//
-//                            script {
-//                                sonarLink = "http://localhost:9000/dashboard?id=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
-//
-//                            }
-//                        }
-//                        unstable {
-//                            errorReport(TYPE)
-//                        }
-//                    }
-//                }
+                            //other one is using gradle build
+                            withSonarQubeEnv() {
+                                // Will pick the global server connection you have configured
+                                sh "./gradlew sonarqube -Dsonar.projectName=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
+                            }
+                            timeout(time: 1, unit: 'HOURS') {
+                                // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                                // true = set pipeline to UNSTABLE, false = don't
+                                waitForQualityGate abortPipeline: true
+                            }
+                        }
+                    }
+                    post {
+                        always {
+
+                            script {
+                                sonarLink = "http://localhost:9000/dashboard?id=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
+
+                            }
+                        }
+                        unstable {
+                            errorReport(TYPE)
+                        }
+                    }
+                }
 
 
                 stage('Release Request[Manual]') {
@@ -385,6 +387,7 @@ pipeline {
                             try {
                                 timeout(time: 1, unit: "HOURS") {
                                     getApproval(TYPE)
+//                                            successReport(TYPE)
                                     approvedBy = input id: 'reqApproval', message: "$SLACK_USER requested  $slackUserRequestedReleaseType ",
                                             ok: 'Approve?',
 //                                                submitter: 'user1,user2,group1',
@@ -425,6 +428,7 @@ pipeline {
                             }
                         }
                     }
+
                 }
 
                 stage('deployment') {
@@ -436,7 +440,7 @@ pipeline {
                         }
                     }
                     steps {
-                        echo 'deployment for PR merge commits and release requests>>>'
+                        echo 'deployment for PR merge commits and release requests'
                     }
                 }
             }
@@ -491,7 +495,7 @@ def getApproval(TYPE) {
     def branch = ""
     def envTemp = ""
     def manualReq = false
-    def body=""
+    def body = ""
     if (TYPE == "DEV_RELEASE_REQ") {
         branch = "Develop"
         envTemp = "Develop"
@@ -531,7 +535,7 @@ def getApproval(TYPE) {
     }
 
     if (manualReq) {
-          body = '''
+        body = '''
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
@@ -567,7 +571,7 @@ Git message [*''' + COMMIT_MSG + '''*]"
  '''
 
     } else {
-         body = '''
+        body = '''
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
@@ -609,15 +613,15 @@ Git message [*''' + COMMIT_MSG + '''*]"
 
 def notifyApproval(type) {
     def channel = "general"
-    def body='''
-{
+    def body = '''
+
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":white_check_mark: *Release Was Approved* <'''+ env.RUN_DISPLAY_URL+'''|[*jenkins pipeline*]>:x: \\nApproved by *'''+approvedBy+'''*\\nGit commit [*'''+COMMIT_HASH+'''*]\\nAuthor [*'''+COMMIT_AUTHOR+'''*]\\nGit message [*'''+COMMIT_MSG+'''*]"
+\t\t\t\t"text": ":white_check_mark: *Release Was Approved* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x: \\nApproved by *''' + approvedBy + '''*\\nGit commit [*''' + COMMIT_HASH + '''*]\\nAuthor [*''' + COMMIT_AUTHOR + '''*]\\nGit message [*''' + COMMIT_MSG + '''*]"
 \t\t\t}
 \t\t},
 \t\t{
@@ -635,14 +639,15 @@ def notifyApproval(type) {
 
 def notifyReject(type, user) {
     def channel = "general"
-    def body='''
+    def body = '''
+
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text":":white_check_mark: *Release Was Rejected* <'''+ env.RUN_DISPLAY_URL+'''|[*jenkins pipeline*]>:x:Rejected by *'''+user+'''*Git commit [*'''+COMMIT_HASH+'''*]Author [*'''+COMMIT_AUTHOR+'''*]Git message [*'''+COMMIT_MSG+'''*]"
+\t\t\t\t"text": ":white_check_mark: *Release Was Rejected* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x: \\n Rejected by *''' + user + '''*\\nGit commit [*''' + COMMIT_HASH + '''*]\\nAuthor [*''' + COMMIT_AUTHOR + '''*]\\nGit message [*''' + COMMIT_MSG + '''*]"
 \t\t\t}
 \t\t},
 \t\t{
@@ -688,8 +693,8 @@ def pullReqSuccessMSGBuilder(channel) {
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":white_check_mark: *PR Build Successful* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>\n 
-\t:fire:<''' + GIT_PR_LINK + ''' |Pull Request> \n 
+\t\t\t\t"text": ":white_check_mark: *PR['''+PR_NUM+'''] Build Successful* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>\n 
+\t:fire:<''' + GIT_PR_LINK + ''' |Pull Request[''' + PR_NUM + ''']> \n 
 \t:fire:Git commit [*''' + COMMIT_HASH + '''*]\n 
 \t:fire:Author [*''' + COMMIT_AUTHOR + '''*]\\n  
 \\t:fire:Git message[*''' + COMMIT_MSG + '''*]"
@@ -716,7 +721,6 @@ def pullReqSuccessMSGBuilder(channel) {
  '''
 }
 
-
 def pullReqFailedMSGBuilder(channel) {
     return '''
 { "channel":"''' + channel + '''",
@@ -725,8 +729,8 @@ def pullReqFailedMSGBuilder(channel) {
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":x: *Pull Request Failed* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x:\n 
-\t:fire:<''' +GIT_PR_LINK+ ''' |Pull Request> \n 
+\t\t\t\t"text": ":x: *Pull Request['''+PR_NUM+''']  Failed* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x:\n 
+\t:fire:<''' + GIT_PR_LINK + ''' |Pull Request[''' + PR_NUM + ''']> \\n 
 \t:fire:Git commit [*''' + COMMIT_HASH + '''*]\n 
 \t:fire:Author [*''' + COMMIT_AUTHOR + '''*]\n  
 \t:fire:Git message[*''' + COMMIT_MSG + '''*]"
@@ -739,7 +743,6 @@ def pullReqFailedMSGBuilder(channel) {
 }
  '''
 }
-
 
 def manualReleaseSuccessMSGBuilder(channel) {
     def branch = ""
