@@ -346,32 +346,27 @@ pipeline {
                     //one method usingg jenkins global configuration
                     steps {
                         script {
+                            try {
 //                    def scannerHome = tool 'SonarScanner 4.0';
 //                    withSonarQubeEnv('mysona') { // If you have configured more than one global server connection, you can specify its name
 //                        sh "${scannerHome}/bin/sonar-scanner"
 //                    }
-                            //other one is using gradle build
-                            withSonarQubeEnv() {
-                                // Will pick the global server connection you have configured
-                                sh "./gradlew sonarqube -Dsonar.projectName=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}  -Dsonar.projectKey=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
-                            }
-                            timeout(time: 1, unit: 'HOURS') {
-                                // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
-                                // true = set pipeline to UNSTABLE, false = don't
-                                waitForQualityGate abortPipeline: true
-                            }
-                        }
-                    }
-                    post {
-                        always {
-
-                            script {
+                                //other one is using gradle build
+                                withSonarQubeEnv() {
+                                    // Will pick the global server connection you have configured
+                                    sh "./gradlew sonarqube -Dsonar.projectName=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}  -Dsonar.projectKey=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
+                                }
+                                timeout(time: 1, unit: 'HOURS') {
+                                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                                    // true = set pipeline to UNSTABLE, false = don't
+                                    waitForQualityGate abortPipeline: true
+                                }
+                            }catch(exception){
+                                errorReport(TYPE)
+                            }finally {
                                 sonarLink = "http://localhost:9000/dashboard?id=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
 
                             }
-                        }
-                        unstable {
-                            errorReport(TYPE)
                         }
                     }
                 }
