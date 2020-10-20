@@ -353,7 +353,7 @@ pipeline {
                             //other one is using gradle build
                             withSonarQubeEnv() {
                                 // Will pick the global server connection you have configured
-                                sh "./gradlew sonarqube -Dsonar.projectName=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
+                                sh "./gradlew sonarqube -Dsonar.projectName=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}  -Dsonar.projectKey=${env.JOB_BASE_NAME}_${env.BUILD_NUMBER}"
                             }
                             timeout(time: 1, unit: 'HOURS') {
                                 // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
