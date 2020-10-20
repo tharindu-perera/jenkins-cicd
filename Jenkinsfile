@@ -141,6 +141,7 @@ pipeline {
                 script {
                     BUILD_USER = currentBuild.getBuildCauses()[0].shortDescription
                     SLACK_USER = env.user_name
+                    PR_NUM=env.CHANGE_ID
                     GIT_PR_LINK = env.CHANGE_URL
                     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse HEAD')
                     COMMIT_AUTHOR = sh(returnStdout: true, script: "git --no-pager show -s --format='%an' ${COMMIT_HASH}").trim()
@@ -151,6 +152,7 @@ pipeline {
                     echo "COMMIT_AUTHOR: ${COMMIT_AUTHOR}"
                     echo "COMMIT_HASH: ${COMMIT_HASH}"
                     echo "GIT_PR_LINK: ${GIT_PR_LINK}"
+                    echo "PR_NUM: ${PR_NUM}"
                 }
             }
             post {
@@ -493,6 +495,7 @@ def getApproval(TYPE) {
     def branch = ""
     def envTemp = ""
     def manualReq = false
+    def body = ""
     if (TYPE == "DEV_RELEASE_REQ") {
         branch = "Develop"
         envTemp = "Develop"
@@ -532,7 +535,7 @@ def getApproval(TYPE) {
     }
 
     if (manualReq) {
-        def body = '''
+        body = '''
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
@@ -568,7 +571,7 @@ Git message [*''' + COMMIT_MSG + '''*]"
  '''
 
     } else {
-        def body = '''
+        body = '''
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
@@ -610,15 +613,15 @@ Git message [*''' + COMMIT_MSG + '''*]"
 
 def notifyApproval(type) {
     def channel = "general"
-    def body='''
-{
+    def body = '''
+
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":white_check_mark: *Release Was Approved* <'''+ env.RUN_DISPLAY_URL+'''|[*jenkins pipeline*]>:x: \\nApproved by *'''+approvedBy+'''*\\nGit commit [*'''+COMMIT_HASH+'''*]\\nAuthor [*'''+COMMIT_AUTHOR+'''*]\\nGit message [*'''+COMMIT_MSG+'''*]"
+\t\t\t\t"text": ":white_check_mark: *Release Was Approved* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x: \\nApproved by *''' + approvedBy + '''*\\nGit commit [*''' + COMMIT_HASH + '''*]\\nAuthor [*''' + COMMIT_AUTHOR + '''*]\\nGit message [*''' + COMMIT_MSG + '''*]"
 \t\t\t}
 \t\t},
 \t\t{
@@ -636,15 +639,15 @@ def notifyApproval(type) {
 
 def notifyReject(type, user) {
     def channel = "general"
-    def body='''
-{
+    def body = '''
+
  { "channel":"''' + channel + '''",
 \t"blocks": [
 \t\t{
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":white_check_mark: *Release Was Rejected* <'''+ env.RUN_DISPLAY_URL+'''|[*jenkins pipeline*]>:x: \\n Rejected by *'''+user+'''*\\nGit commit [*'''+COMMIT_HASH+'''*]\\nAuthor [*'''+COMMIT_AUTHOR+'''*]\\nGit message [*'''+COMMIT_MSG+'''*]"
+\t\t\t\t"text": ":white_check_mark: *Release Was Rejected* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x: \\n Rejected by *''' + user + '''*\\nGit commit [*''' + COMMIT_HASH + '''*]\\nAuthor [*''' + COMMIT_AUTHOR + '''*]\\nGit message [*''' + COMMIT_MSG + '''*]"
 \t\t\t}
 \t\t},
 \t\t{
@@ -690,8 +693,8 @@ def pullReqSuccessMSGBuilder(channel) {
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":white_check_mark: *PR Build Successful* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>\n 
-\t:fire:<''' + GIT_PR_LINK + ''' |Pull Request> \n 
+\t\t\t\t"text": ":white_check_mark: *PR['''+PR_NUM+'''] Build Successful* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>\n 
+\t:fire:<''' + GIT_PR_LINK + ''' |Pull Request[''' + PR_NUM + ''']> \n 
 \t:fire:Git commit [*''' + COMMIT_HASH + '''*]\n 
 \t:fire:Author [*''' + COMMIT_AUTHOR + '''*]\\n  
 \\t:fire:Git message[*''' + COMMIT_MSG + '''*]"
@@ -718,7 +721,6 @@ def pullReqSuccessMSGBuilder(channel) {
  '''
 }
 
-
 def pullReqFailedMSGBuilder(channel) {
     return '''
 { "channel":"''' + channel + '''",
@@ -727,8 +729,8 @@ def pullReqFailedMSGBuilder(channel) {
 \t\t\t"type": "section",
 \t\t\t"text": {
 \t\t\t\t"type": "mrkdwn",
-\t\t\t\t"text": ":x: *Pull Request Failed* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x:\n 
-\t:fire:<''' +GIT_PR_LINK+ ''' |Pull Request> \n 
+\t\t\t\t"text": ":x: *Pull Request['''+PR_NUM+''']  Failed* <''' + env.RUN_DISPLAY_URL + '''|[*jenkins pipeline*]>:x:\n 
+\t:fire:<''' + GIT_PR_LINK + ''' |Pull Request[''' + PR_NUM + ''']> \\n 
 \t:fire:Git commit [*''' + COMMIT_HASH + '''*]\n 
 \t:fire:Author [*''' + COMMIT_AUTHOR + '''*]\n  
 \t:fire:Git message[*''' + COMMIT_MSG + '''*]"
@@ -741,7 +743,6 @@ def pullReqFailedMSGBuilder(channel) {
 }
  '''
 }
-
 
 def manualReleaseSuccessMSGBuilder(channel) {
     def branch = ""
